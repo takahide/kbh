@@ -18,11 +18,28 @@ ActiveRecord::Base.configurations = YAML.load_file('config/database.yml')
 ActiveRecord::Base.establish_connection('local_dev') if development?
 ActiveRecord::Base.establish_connection('pains_dev') if production?
 
-class Player < ActiveRecord::Base
+class History < ActiveRecord::Base
+end
+
+class Jockey < ActiveRecord::Base
 end
 
 get '/' do
   haml :index
+end
+
+get '/any' do
+  content_type :json, :charset => 'utf-8'
+  query = params['q']
+  jockey = Jockey.where(name: query)
+end
+
+get '/jockey' do
+  content_type :json, :charset => 'utf-8'
+  query = params['q']
+  jockey = Jockey.where(name: query)
+  histories = History.where(jockey_id: jockey[0].jockey_id)
+  histories.to_json
 end
 
 get '/page1.html' do
