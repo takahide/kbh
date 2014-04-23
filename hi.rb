@@ -35,11 +35,15 @@ get '/any' do
 end
 
 get '/jockey' do
-  content_type :json, :charset => 'utf-8'
-  query = params['q']
-  jockey = Jockey.where(name: query)
-  histories = History.where(jockey_id: jockey[0].jockey_id)
-  histories.to_json
+  ActiveRecord::Base.connection_pool.with_connection do
+    begin
+      content_type :json, :charset => 'utf-8'
+      query = params['q']
+      jockey = Jockey.where(name: query)
+      histories = History.where(jockey_id: jockey[0].jockey_id)
+      histories.to_json
+    end
+  end
 end
 
 get '/page1.html' do
