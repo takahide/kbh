@@ -15,10 +15,13 @@ end
 
 ActiveRecord::Base.configurations = YAML.load_file('config/database.yml')
 
-ActiveRecord::Base.establish_connection('local_dev') if development?
-ActiveRecord::Base.establish_connection('pains_dev') if production?
+ActiveRecord::Base.establish_connection(:local_dev) if development?
+ActiveRecord::Base.establish_connection(:pains_dev) if production?
 
 class History < ActiveRecord::Base
+end
+
+class Race < ActiveRecord::Base
 end
 
 class Jockey < ActiveRecord::Base
@@ -39,9 +42,18 @@ get '/jockey' do
     begin
       content_type :json, :charset => 'utf-8'
       query = params['q']
+      turf_lower = params['tl'].to_i
+      turf_upper = params['tu'].to_i
+      dirt_lower = params['dl'].to_i
+      dirt_upper = params['du'].to_i
       jockey = Jockey.where(name: query)
-      histories = History.where(jockey_id: jockey[0].jockey_id)
-      histories.to_json
+
+      histories = History.where("((length >= ? and length <= ? and course = 0) or (length >= ? and length <= ? and course = 1)) and jockey_id = ?", turf_lower, turf_upper, dirt_lower, dirt_upper, jockey[0].jockey_id)
+      result_histories = Array.new
+      histories.each do |h|
+        result_histories << h.name.strip + ":" + h.popularity.to_s + ":" + h.rank
+      end
+      result_histories.to_json
     end
   end
 end
