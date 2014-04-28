@@ -18,6 +18,12 @@ ActiveRecord::Base.configurations = YAML.load_file('config/database.yml')
 ActiveRecord::Base.establish_connection(:local_dev) if development?
 ActiveRecord::Base.establish_connection(:pains_dev) if production?
 
+class Question < ActiveRecord::Base
+end
+
+class Category < ActiveRecord::Base
+end
+
 class History < ActiveRecord::Base
 end
 
@@ -29,6 +35,18 @@ end
 
 get '/' do
   haml :index
+end
+
+get '/questions' do
+  ActiveRecord::Base.connection_pool.with_connection do
+    begin
+      content_type :json, :charset => 'utf-8'
+      category_name = params['c']
+      category = Category.where(name: category_name)
+      questions = Question.where(category: category[0].id)
+      questions.to_json
+    end
+  end
 end
 
 get '/any' do
